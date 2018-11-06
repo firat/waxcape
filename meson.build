@@ -1,0 +1,5 @@
+project('waxscape', 'c')
+libinput = dependency('libinput')
+libudev = dependency('libudev')
+libevdev = dependency('libevdev')
+executable('waxscape', 'main.c', dependencies: [libinput, libudev, libevdev])
