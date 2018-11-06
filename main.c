@@ -171,6 +171,15 @@ const static struct libinput_interface interface = {
 
 void print_usage() { printf("USAGE: waxcape <device>\n"); }
 
+void waxcape_clear_state(struct libevdev *dev, struct libevdev_uinput *waxcape_keyboard) {
+	for (int e = 0; e < libevdev_event_type_get_max(EV_KEY); e++) {
+		if (libevdev_has_event_code(dev, EV_KEY, e)) {
+			libevdev_uinput_write_event(waxcape_keyboard, EV_KEY, e, 0);
+		}
+	}
+	libevdev_uinput_write_event(waxcape_keyboard, EV_SYN, SYN_REPORT, 0);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2) {
         print_usage();
@@ -199,20 +208,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    struct libevdev_uinput* foo;
+    libevdev_set_name(evdev, "Waxcape Keyboard");
     rc = libevdev_uinput_create_from_device(evdev, LIBEVDEV_UINPUT_OPEN_MANAGED,
-                                            &foo);
+                                            &waxcape_keyboard);
+
+	waxcape_clear_state(evdev, waxcape_keyboard);
+
     if (rc < 0) {
         fprintf(stderr, "Failed to create waxcape keyboard: %d %s\n", -rc,
                 strerror(-rc));
         return 1;
     }
-
-    waxcape_keyboard = foo;
-
-    // We don't need the evdev and fd once we create the uinput instance.
-    libevdev_free(evdev);
-    close(src_fd);
 
     struct libinput* li;
     li = libinput_path_create_context(&interface, NULL);
@@ -232,6 +238,8 @@ int main(int argc, char** argv) {
     waxcape_poll_and_handle_events_loop(li);
 
     // Clean up
+    libevdev_free(evdev);
+    close(src_fd);
     libinput_unref(li);
     libevdev_uinput_destroy(waxcape_keyboard);
     printf("Done.\n");
