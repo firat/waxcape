@@ -1,0 +1,19 @@
+# %i and %I will be replaced by the "instance identifier".
+# This means, if you start a service with the template waxcape@foo.service,
+# %i and %I will be replaced by "foo". This is used for binding a specific
+# waxcape instance to a device (it is killed when devices is disconnected)
+# and also for passing the device name as an argument to the simple waxcape
+# binary
+
+[Unit]
+Description=Waxcape daemon for interrupting and modifying keyboard input
+BindTo=%i.device
+After=dev-%i.device systemd-user-sessions.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/waxcape /%I
+User=root
+Group=root
+Restart=always
+RestartSec=0
