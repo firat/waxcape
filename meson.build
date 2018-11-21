@@ -1,4 +1,4 @@
-project('waxscape', 'c')
+project('waxcape', 'c')
 libinput = dependency('libinput')
 libudev = dependency('libudev')
 libevdev = dependency('libevdev')
