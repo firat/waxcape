@@ -1,14 +1,14 @@
-#include <libinput.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
-#include <stdio.h>
+#include <fcntl.h>
+#include <libevdev/libevdev-uinput.h>
+#include <libevdev/libevdev.h>
+#include <libinput.h>
 #include <poll.h>
 #include <signal.h>
-#include <string.h>
 #include <stdbool.h>
-#include <libevdev/libevdev.h>
-#include <libevdev/libevdev-uinput.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 static volatile sig_atomic_t stop = 0;
 static struct libevdev_uinput* waxcape_keyboard;
@@ -19,27 +19,25 @@ enum waxcape_state { NOT_PRESSED, PRESSED, CTRL_PRESSED };
 static enum waxcape_state caps_state = NOT_PRESSED;
 
 static void print_key_name(int32_t key, int state) {
-	char *key_name;
-	char key_arr [1024];
-	sprintf(key_arr, "%d", key);
-	switch (key) {
-		case KEY_CAPSLOCK:
-			key_name = "Caps Lock";
-			break;
-		case KEY_LEFTCTRL:
-			key_name = "Left Ctrl";
-			break;
-		case KEY_ESC:
-			key_name = "Escape";
-			break;
-		default:
-			key_name = key_arr;
-	}
+    char* key_name;
+    char key_arr[1024];
+    sprintf(key_arr, "%d", key);
+    switch (key) {
+    case KEY_CAPSLOCK:
+        key_name = "Caps Lock";
+        break;
+    case KEY_LEFTCTRL:
+        key_name = "Left Ctrl";
+        break;
+    case KEY_ESC:
+        key_name = "Escape";
+        break;
+    default:
+        key_name = key_arr;
+    }
 
-
-	printf("Key: %s, state: %d\n", key_name, state);
+    printf("Key: %s, state: %d\n", key_name, state);
 }
-
 
 static void waxcape_handle_key_event(struct libinput_event* ev) {
     enum libinput_event_type ev_type = libinput_event_get_type(ev);
@@ -50,9 +48,9 @@ static void waxcape_handle_key_event(struct libinput_event* ev) {
             libinput_event_keyboard_get_key_state(k);
         uint32_t key = libinput_event_keyboard_get_key(k);
 
-		if (debug) {
-			print_key_name(key, state);
-		}
+        if (debug) {
+            print_key_name(key, state);
+        }
 
         switch (caps_state) {
         case NOT_PRESSED:
@@ -101,13 +99,13 @@ static void waxcape_handle_key_event(struct libinput_event* ev) {
                     caps_state = NOT_PRESSED;
                 }
             } else {
-				// Report key event without changing state since CTRL is not released.
-				libevdev_uinput_write_event(waxcape_keyboard, EV_KEY, key,
+                // Report key event without changing state since CTRL is not
+                // released.
+                libevdev_uinput_write_event(waxcape_keyboard, EV_KEY, key,
                                             state);
                 libevdev_uinput_write_event(waxcape_keyboard, EV_SYN,
                                             SYN_REPORT, 0);
-
-			}
+            }
             break;
         }
     }
@@ -171,13 +169,14 @@ const static struct libinput_interface interface = {
 
 void print_usage() { printf("USAGE: waxcape <device>\n"); }
 
-void waxcape_clear_state(struct libevdev *dev, struct libevdev_uinput *waxcape_keyboard) {
-	for (int e = 0; e < libevdev_event_type_get_max(EV_KEY); e++) {
-		if (libevdev_has_event_code(dev, EV_KEY, e)) {
-			libevdev_uinput_write_event(waxcape_keyboard, EV_KEY, e, 0);
-		}
-	}
-	libevdev_uinput_write_event(waxcape_keyboard, EV_SYN, SYN_REPORT, 0);
+void waxcape_clear_state(struct libevdev* dev,
+                         struct libevdev_uinput* waxcape_keyboard) {
+    for (int e = 0; e < libevdev_event_type_get_max(EV_KEY); e++) {
+        if (libevdev_has_event_code(dev, EV_KEY, e)) {
+            libevdev_uinput_write_event(waxcape_keyboard, EV_KEY, e, 0);
+        }
+    }
+    libevdev_uinput_write_event(waxcape_keyboard, EV_SYN, SYN_REPORT, 0);
 }
 
 int main(int argc, char** argv) {
@@ -212,7 +211,7 @@ int main(int argc, char** argv) {
     rc = libevdev_uinput_create_from_device(evdev, LIBEVDEV_UINPUT_OPEN_MANAGED,
                                             &waxcape_keyboard);
 
-	waxcape_clear_state(evdev, waxcape_keyboard);
+    waxcape_clear_state(evdev, waxcape_keyboard);
 
     if (rc < 0) {
         fprintf(stderr, "Failed to create waxcape keyboard: %d %s\n", -rc,
@@ -228,7 +227,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-	// Sleep 1 second before capturing the keyboard so the enter key doesn't stay stuck.
+    // Sleep 1 second before capturing the keyboard so the enter key doesn't
+    // stay stuck.
     sleep(1);
     if (!libinput_path_add_device(li, src_keyboard)) {
         fprintf(stderr, "Failed to capture input: %s\n", src_keyboard);
