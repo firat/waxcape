@@ -1,2 +1,2 @@
 # Make sure we don't trigger this for uinput devices since waxcape itself creates a uinput devices. This will recursively create new devices and waxcape instances, and will eventually make all keyboards unusable.
-SUBSYSTEM=="input", ATTRS{name}!="Waxcape Keyboard" ACTION=="add", ENV{ID_INPUT_KEYBOARD}=="1", TAG+="systemd" PROGRAM="/usr/bin/systemd-escape -p --template=waxcape@.service  $env{DEVNAME}", ENV{SYSTEMD_WANTS}="%c"
+SUBSYSTEM=="input", ATTRS{name}!="Waxcape Keyboard" ACTION=="add", ENV{ID_INPUT_KEYBOARD}=="1", ENV{ID_INPUT_MOUSE}!="1", TAG+="systemd" PROGRAM="/usr/bin/systemd-escape -p --template=waxcape@.service  $env{DEVNAME}", ENV{SYSTEMD_WANTS}="%c"
